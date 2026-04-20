@@ -6,7 +6,7 @@ from datetime import datetime
 
 BOT_TOKEN = "8633532786:AAEb58mfr1LbvJWR3VqkscAEwHuKe-vINX8"
 CHAT_ID = "8709378912"
-GEMINI_KEY = "AIzaSyB92Tj3yun8_bQ_HnYCoYWem0lxUVC8mf0"
+GEMINI_KEY = "AIzaSyCRbe2kH3Hm8J8xNBVMF6YnLNthDndN3lI"
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
