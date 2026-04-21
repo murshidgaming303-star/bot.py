@@ -2,11 +2,12 @@ import telebot
 import requests
 import schedule
 import time
+import os
 from datetime import datetime
 
-BOT_TOKEN = "8633532786:AAEb58mfr1LbvJWR3VqkscAEwHuKe-vINX8"
-CHAT_ID = "8709378912"
-GEMINI_KEY = "AIzaSyA5ADTfKqx_DfaHrAYMTQ-LFWAuRCMwUqw"
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
+CHAT_ID = os.environ.get('CHAT_ID')
+GEMINI_KEY = os.environ.get('GEMINI_KEY')
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
