@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TurboVPN App Preview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #050D1A;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 30px 20px 60px;
+    color: #fff;
+  }
+
+  h1 { font-size: 22px; font-weight: 800; letter-spacing: 2px; margin-bottom: 6px; color: #00C6FF; }
+  .subtitle { color: #7E9BB5; font-size: 13px; margin-bottom: 30px; }
+
+  /* Screen nav */
+  .nav { display: flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap; justify-content: center; }
+  .nav-btn {
+    padding: 8px 18px; border-radius: 20px; border: 1.5px solid #1E3350;
+    background: #0F1E35; color: #7E9BB5; cursor: pointer; font-size: 13px;
+    font-weight: 600; transition: all .2s;
+  }
+  .nav-btn.active { background: linear-gradient(135deg,#0072FF,#00C6FF); color: #fff; border-color: transparent; }
+
+  /* Phone frame */
+  .phone-wrap { position: relative; }
+  .phone-frame {
+    width: 320px; height: 640px;
+    background: #0A0E1A;
+    border-radius: 42px;
+    border: 8px solid #1A2E4A;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 0 2px #0F2040, 0 30px 80px rgba(0,198,255,.18), 0 0 60px rgba(0,114,255,.08);
+  }
+  /* Notch */
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 100px; height: 26px; background: #1A2E4A; border-radius: 0 0 16px 16px;
+    z-index: 10; display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .notch-cam { width: 8px; height: 8px; background: #0A0E1A; border-radius: 50%; }
+
+  /* Screens */
+  .screen { display: none; width: 100%; height: 100%; flex-direction: column; overflow: hidden; }
+  .screen.active { display: flex; }
+
+  /* ── SPLASH ── */
+  #splash {
+    background: linear-gradient(160deg,#08101E,#0F1E35,#08101E);
+    align-items: center; justify-content: center;
+  }
+  .splash-circle {
+    width: 100px; height: 100px; border-radius: 50%;
+    background: linear-gradient(135deg,#0072FF,#00C6FF);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 48px; box-shadow: 0 0 40px rgba(0,198,255,.5);
+    margin-bottom: 22px;
+  }
+  .splash-name { font-size: 32px; font-weight: 900; letter-spacing: 2px; }
+  .splash-tag  { color: #7E9BB5; font-size: 13px; margin-top: 6px; letter-spacing: 1.5px; }
+  .splash-dots { display: flex; gap: 7px; margin-top: 50px; }
+  .dot { width: 8px; height: 8px; border-radius: 4px; background: #1E3350; }
+  .dot.active { width: 22px; background: #00C6FF; }
+
+  /* ── HOME ── */
+  #home { background: linear-gradient(180deg,#08101E 0%,#0F1E35 100%); }
+  .top-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 36px 16px 10px;
+  }
+  .app-title { font-size: 17px; font-weight: 800; }
+  .avatar-btn {
+    width: 34px; height: 34px; border-radius: 17px;
+    background: #1A2E4A; display: flex; align-items: center; justify-content: center; font-size: 16px;
+    cursor: pointer;
+  }
+
+  .status-chip {
+    margin: 4px auto 0; padding: 5px 16px; border-radius: 20px;
+    font-size: 12px; font-weight: 600; width: fit-content;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .status-chip.connected   { background: rgba(0,230,118,.12); border: 1px solid rgba(0,230,118,.35); color: #00E676; }
+  .status-chip.disconnected{ background: rgba(126,155,181,.08); border: 1px solid rgba(126,155,181,.2); color: #7E9BB5; }
+
+  /* Connect button */
+  .btn-area { display: flex; align-items: center; justify-content: center; padding: 22px 0 18px; position: relative; }
+  .ring-outer {
+    width: 176px; height: 176px; border-radius: 50%;
+    background: rgba(0,198,255,.10);
+    display: flex; align-items: center; justify-content: center;
+    position: absolute;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .ring-inner {
+    width: 148px; height: 148px; border-radius: 50%;
+    background: rgba(0,198,255,.07);
+    display: flex; align-items: center; justify-content: center;
+    position: absolute;
+    animation: pulse 2s ease-in-out infinite .4s;
+  }
+  @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.08);opacity:.7} }
+  .connect-btn {
+    width: 112px; height: 112px; border-radius: 50%;
+    background: linear-gradient(135deg,#0072FF,#00C6FF);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; position: relative; z-index: 2;
+    box-shadow: 0 0 28px rgba(0,198,255,.5);
+    transition: transform .15s;
+  }
+  .connect-btn:active { transform: scale(.93); }
+  .connect-btn .power { font-size: 34px; line-height: 1; }
+  .connect-btn .lbl   { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; color: rgba(255,255,255,.85); margin-top: 2px; }
+
+  .connect-btn.connected {
+    background: linear-gradient(135deg,#00B09B,#00E676);
+    box-shadow: 0 0 28px rgba(0,230,118,.5);
+  }
+
+  /* Stats */
+  .stats-row {
+    display: flex; margin: 0 12px 10px;
+    background: #0F1E35; border-radius: 14px;
+    padding: 12px 8px; border: 1px solid #1E3350;
+    justify-content: space-around;
+  }
+  .stat-box { text-align: center; flex: 1; }
+  .stat-val { font-size: 13px; font-weight: 700; }
+  .stat-lbl { font-size: 10px; color: #7E9BB5; margin-top: 2px; }
+  .stat-div { width: 1px; background: #1E3350; margin: 4px 0; }
+
+  /* Server mini card */
+  .server-mini {
+    margin: 0 12px 10px;
+    background: linear-gradient(135deg,#0F1E35,#1A2E4A);
+    border-radius: 16px; padding: 12px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    border: 1px solid #1E3350; cursor: pointer;
+  }
+  .server-mini-left { display: flex; align-items: center; gap: 10px; }
+  .server-mini-flag { font-size: 28px; }
+  .server-mini-name { font-size: 14px; font-weight: 600; }
+  .server-mini-sub  { font-size: 11px; color: #7E9BB5; margin-top: 2px; }
+  .chevron { color: #7E9BB5; font-size: 20px; }
+
+  /* Premium banner */
+  .premium-banner {
+    margin: 0 12px; border-radius: 14px; padding: 12px 14px;
+    background: linear-gradient(90deg,#B8860B,#FFD700);
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+  }
+  .pb-icon  { font-size: 24px; }
+  .pb-title { color: #000; font-size: 13px; font-weight: 800; }
+  .pb-sub   { color: rgba(0,0,0,.6); font-size: 11px; }
+
+  /* Bottom tab bar */
+  .tab-bar {
+    margin-top: auto;
+    display: flex; background: #0F1E35;
+    border-top: 1px solid #1E3350; padding: 8px 0 4px;
+  }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; }
+  .tab-icon { font-size: 20px; }
+  .tab-lbl  { font-size: 9px; color: #3D5A73; font-weight: 600; }
+  .tab.active .tab-lbl { color: #00C6FF; }
+
+  /* ── SERVER LIST ── */
+  #servers { background: linear-gradient(180deg,#08101E,#0F1E35); }
+  .screen-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 36px 14px 12px;
+  }
+  .back-btn {
+    width: 32px; height: 32px; border-radius: 16px;
+    background: #1A2E4A; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: #fff; cursor: pointer; line-height: 1;
+  }
+  .screen-title { font-size: 17px; font-weight: 700; }
+
+  .search-bar {
+    margin: 0 12px 10px; background: #0F1E35;
+    border-radius: 12px; border: 1px solid #1E3350;
+    padding: 9px 12px; display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: #3D5A73;
+  }
+
+  .tabs-row {
+    display: flex; margin: 0 12px 8px;
+    background: #0F1E35; border-radius: 12px; padding: 3px;
+    border: 1px solid #1E3350;
+  }
+  .stab {
+    flex: 1; text-align: center; padding: 6px; border-radius: 9px;
+    font-size: 12px; font-weight: 600; color: #7E9BB5; cursor: pointer;
+  }
+  .stab.active { background: rgba(0,198,255,.15); color: #00C6FF; border: 1px solid rgba(0,198,255,.3); }
+
+  .count-lbl { font-size: 11px; color: #3D5A73; padding: 0 14px 6px; }
+
+  .server-list { overflow-y: auto; flex: 1; padding: 0 12px; }
+  .server-card {
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg,#0F1E35,#1A2E4A);
+    border-radius: 14px; padding: 10px 12px; margin-bottom: 8px;
+    border: 1px solid #1E3350; cursor: pointer; transition: border-color .2s;
+  }
+  .server-card.selected { border-color: #00C6FF; box-shadow: 0 0 12px rgba(0,198,255,.2); }
+  .sc-left { display: flex; align-items: center; gap: 10px; }
+  .sc-flag { font-size: 28px; }
+  .sc-name { font-size: 13px; font-weight: 600; }
+  .sc-city { font-size: 11px; color: #7E9BB5; margin-top: 1px; }
+  .sc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .ping { font-size: 11px; font-weight: 700; }
+  .ping.good { color: #00E676; } .ping.ok { color: #FFD700; } .ping.bad { color: #FF4757; }
+  .pro-badge {
+    background: #FFD700; color: #000; font-size: 8px; font-weight: 800;
+    padding: 1px 5px; border-radius: 3px; letter-spacing: .5px;
+  }
+  .lock { font-size: 14px; }
+  .load-bar { width: 60px; height: 3px; background: #1E3350; border-radius: 2px; overflow: hidden; margin-top: 4px; }
+  .load-fill { height: 100%; border-radius: 2px; }
+
+  /* ── ACCOUNT ── */
+  #account { background: linear-gradient(180deg,#08101E,#0F1E35); overflow-y: auto; }
+  .account-avatar-wrap { display: flex; flex-direction: column; align-items: center; padding: 36px 0 18px; }
+  .account-avatar {
+    width: 72px; height: 72px; border-radius: 36px;
+    background: linear-gradient(135deg,#0072FF,#00C6FF);
+    display: flex; align-items: center; justify-content: center; font-size: 34px;
+    margin-bottom: 10px;
+  }
+  .account-plan-label { color: #7E9BB5; font-size: 13px; font-weight: 600; }
+
+  .plan-card {
+    margin: 0 12px 12px;
+    background: linear-gradient(135deg,#0F1E35,#1A2E4A);
+    border-radius: 16px; padding: 14px 16px;
+    border: 1px solid #1E3350;
+  }
+  .plan-name-big { font-size: 20px; font-weight: 800; margin-bottom: 3px; }
+  .plan-expires  { color: #7E9BB5; font-size: 11px; }
+
+  .feature-card {
+    margin: 0 12px 12px; background: #0F1E35;
+    border-radius: 16px; padding: 14px 16px; border: 1px solid #1E3350;
+  }
+  .feature-card-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+  .feat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .feat-icon { font-size: 16px; width: 24px; }
+  .feat-text { font-size: 12px; flex: 1; }
+  .feat-text.dim { color: #3D5A73; }
+  .feat-tick { font-size: 14px; font-weight: 700; }
+  .feat-tick.ok  { color: #00E676; }
+  .feat-tick.no  { color: #3D5A73; }
+
+  .upgrade-btn {
+    margin: 0 12px 12px; border-radius: 14px; padding: 14px;
+    background: linear-gradient(90deg,#0072FF,#00C6FF);
+    text-align: center; font-size: 14px; font-weight: 800;
+    cursor: pointer; box-shadow: 0 4px 20px rgba(0,198,255,.3);
+  }
+</style>
+</head>
+<body>
+
+<h1>🛡 TurboVPN</h1>
+<p class="subtitle">Android App Preview — Exact UI Design</p>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="showScreen('splash',this)">💫 Splash</button>
+  <button class="nav-btn" onclick="showScreen('home',this)">🏠 Home</button>
+  <button class="nav-btn" onclick="showScreen('home-connected',this)">✅ Connected</button>
+  <button class="nav-btn" onclick="showScreen('servers',this)">🌍 Servers</button>
+  <button class="nav-btn" onclick="showScreen('account',this)">👤 Account</button>
+</div>
+
+<div class="phone-wrap">
+  <div class="phone-frame">
+    <div class="notch"><div class="notch-cam"></div></div>
+
+    <!-- SPLASH -->
+    <div id="splash" class="screen active">
+      <div class="splash-circle">🛡</div>
+      <span class="splash-name">TurboVPN</span>
+      <span class="splash-tag">Fast • Secure • Free</span>
+      <div class="splash-dots">
+        <div class="dot"></div><div class="dot active"></div><div class="dot"></div>
+      </div>
+    </div>
+
+    <!-- HOME (disconnected) -->
+    <div id="home" class="screen">
+      <div class="top-bar">
+        <span class="app-title">🛡 TurboVPN</span>
+        <div class="avatar-btn">👤</div>
+      </div>
+      <div class="status-chip disconnected">○ &nbsp;Not Connected</div>
+      <div class="btn-area">
+        <div class="ring-outer"></div>
+        <div class="ring-inner"></div>
+        <div class="connect-btn">
+          <span class="power">⏻</span>
+          <span class="lbl">CONNECT</span>
+        </div>
+      </div>
+      <div class="server-mini">
+        <div class="server-mini-left">
+          <span class="server-mini-flag">🇺🇸</span>
+          <div>
+            <div class="server-mini-name">USA - New York</div>
+            <div class="server-mini-sub">45ms &nbsp;•&nbsp; 62% load</div>
+          </div>
+        </div>
+        <span class="chevron">›</span>
+      </div>
+      <div style="margin:0 12px 10px;background:#0F1E35;border-radius:14px;padding:12px 14px;border:1px solid #1E3350;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px">💡</span>
+        <span style="color:#7E9BB5;font-size:12px;line-height:1.5">Tap the button above to connect instantly.<br>Your data will be fully encrypted.</span>
+      </div>
+      <div class="premium-banner">
+        <span class="pb-icon">💎</span>
+        <div><div class="pb-title">Upgrade to Premium</div><div class="pb-sub">Unlock 8+ fast servers worldwide</div></div>
+        <span style="color:rgba(0,0,0,.5);font-size:20px;margin-left:auto">›</span>
+      </div>
+      <div class="tab-bar">
+        <div class="tab active"><span class="tab-icon">🛡</span><span class="tab-lbl">VPN</span></div>
+        <div class="tab"><span class="tab-icon">🌍</span><span class="tab-lbl">Servers</span></div>
+        <div class="tab"><span class="tab-icon">👤</span><span class="tab-lbl">Account</span></div>
+      </div>
+    </div>
+
+    <!-- HOME (connected) -->
+    <div id="home-connected" class="screen">
+      <div class="top-bar">
+        <span class="app-title">🛡 TurboVPN</span>
+        <div class="avatar-btn">👤</div>
+      </div>
+      <div class="status-chip connected">● &nbsp;Connected</div>
+      <div class="btn-area">
+        <div class="ring-outer" style="background:rgba(0,230,118,.12);animation:pulse 1.5s ease-in-out infinite"></div>
+        <div class="ring-inner" style="background:rgba(0,230,118,.08);animation:pulse 1.5s ease-in-out infinite .3s"></div>
+        <div class="connect-btn connected">
+          <span class="power">⏻</span>
+          <span class="lbl">CONNECTED</span>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-val" style="color:#00C6FF">⬇ 24.3 MB</div><div class="stat-lbl">Download</div></div>
+        <div class="stat-div"></div>
+        <div class="stat-box"><div class="stat-val">⏱ 00:04:32</div><div class="stat-lbl">Duration</div></div>
+        <div class="stat-div"></div>
+        <div class="stat-box"><div class="stat-val" style="color:#00E676">⬆ 5.1 MB</div><div class="stat-lbl">Upload</div></div>
+      </div>
+      <div class="server-mini">
+        <div class="server-mini-left">
+          <span class="server-mini-flag">🇺🇸</span>
+          <div>
+            <div class="server-mini-name">USA - New York</div>
+            <div class="server-mini-sub">45ms &nbsp;•&nbsp; 62% load</div>
+          </div>
+        </div>
+        <span class="chevron">›</span>
+      </div>
+      <div class="tab-bar">
+        <div class="tab active"><span class="tab-icon">🛡</span><span class="tab-lbl">VPN</span></div>
+        <div class="tab"><span class="tab-icon">🌍</span><span class="tab-lbl">Servers</span></div>
+        <div class="tab"><span class="tab-icon">👤</span><span class="tab-lbl">Account</span></div>
+      </div>
+    </div>
+
+    <!-- SERVERS -->
+    <div id="servers" class="screen">
+      <div class="screen-header">
+        <div class="back-btn">‹</div>
+        <span class="screen-title">Select Server</span>
+      </div>
+      <div class="search-bar">🔍 &nbsp;Search country or city...</div>
+      <div class="tabs-row">
+        <div class="stab active">All</div>
+        <div class="stab">Free</div>
+        <div class="stab">Premium</div>
+      </div>
+      <div class="count-lbl">8 servers available</div>
+      <div class="server-list">
+        <!-- Free servers -->
+        <div class="server-card selected">
+          <div class="sc-left">
+            <span class="sc-flag">🇺🇸</span>
+            <div><div class="sc-name">USA - New York</div><div class="sc-city">New York</div>
+              <div class="load-bar"><div class="load-fill" style="width:62%;background:#FFD700"></div></div>
+            </div>
+          </div>
+          <div class="sc-right"><span class="ping good">45ms</span><span style="color:#00E676;font-size:16px;font-weight:700">✓</span></div>
+        </div>
+        <div class="server-card">
+          <div class="sc-left">
+            <span class="sc-flag">🇩🇪</span>
+            <div><div class="sc-name">Germany - Frankfurt</div><div class="sc-city">Frankfurt</div>
+              <div class="load-bar"><div class="load-fill" style="width:45%;background:#00E676"></div></div>
+            </div>
+          </div>
+          <div class="sc-right"><span class="ping good">38ms</span></div>
+        </div>
+        <div class="server-card">
+          <div class="sc-left">
+            <span class="sc-flag">🇬🇧</span>
+            <div><div class="sc-name">UK - London</div><div class="sc-city">London</div>
+              <div class="load-bar"><div class="load-fill" style="width:55%;background:#FFD700"></div></div>
+            </div>
+          </div>
+          <div class="sc-right"><span class="ping ok">52ms</span></div>
+        </div>
+        <!-- Premium servers -->
+        <div class="server-card" style="opacity:.55">
+          <div class="sc-left">
+            <span class="sc-flag">🇯🇵</span>
+            <div><div style="display:flex;align-items:center;gap:6px"><div class="sc-name">Japan - Tokyo</div><span class="pro-badge">PRO</span></div><div class="sc-city">Tokyo</div>
+              <div class="load-bar"><div class="load-fill" style="width:30%;background:#00E676"></div></div>
+            </div>
+          </div>
+          <div class="sc-right"><span class="lock">🔒</span></div>
+        </div>
+        <div class="server-card" style="opacity:.55">
+          <div class="sc-left">
+            <span class="sc-flag">🇸🇬</span>
+            <div><div style="display:flex;align-items:center;gap:6px"><div class="sc-name">Singapore</div><span class="pro-badge">PRO</span></div><div class="sc-city">Singapore</div>
+              <div class="load-bar"><div class="load-fill" style="width:25%;background:#00E676"></div></div>
+            </div>
+          </div>
+          <div class="sc-right"><span class="lock">🔒</span></div>
+        </div>
+        <div class="server-card" style="opacity:.55">
+          <div class="sc-left">
+            <span class="sc-flag">🇳🇱</span>
+            <div><div style="display:flex;align-items:center;gap:6px"><div class="sc-name">Netherlands</div><span class="pro-badge">PRO</span></div><div class="sc-city">Amsterdam</div>
+              <div class="load-bar"><div class="load-fill" style="width:40%;background:#00E676"></div></div>
+            </div>
+          </div>
+          <div class="sc-right"><span class="lock">🔒</span></div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab"><span class="tab-icon">🛡</span><span class="tab-lbl">VPN</span></div>
+        <div class="tab active"><span class="tab-icon">🌍</span><span class="tab-lbl">Servers</span></div>
+        <div class="tab"><span class="tab-icon">👤</span><span class="tab-lbl">Account</span></div>
+      </div>
+    </div>
+
+    <!-- ACCOUNT -->
+    <div id="account" class="screen">
+      <div class="account-avatar-wrap">
+        <div class="account-avatar">👤</div>
+        <span class="account-plan-label">🆓 Free Member</span>
+      </div>
+      <div class="plan-card">
+        <div style="font-size:11px;color:#7E9BB5;margin-bottom:3px">Current Plan</div>
+        <div class="plan-name-big">🆓 Free</div>
+        <div class="plan-expires">Expires: 2026-05-22</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-title">Plan Features</div>
+        <div class="feat-row"><span class="feat-icon">🌍</span><span class="feat-text">3 Free Servers (US, DE, UK)</span><span class="feat-tick ok">✓</span></div>
+        <div class="feat-row"><span class="feat-icon">🔒</span><span class="feat-text">WireGuard Encryption</span><span class="feat-tick ok">✓</span></div>
+        <div class="feat-row"><span class="feat-icon">♾</span><span class="feat-text dim">Unlimited Bandwidth</span><span class="feat-tick no">✕</span></div>
+        <div class="feat-row"><span class="feat-icon">⚡</span><span class="feat-text dim">8+ Premium Servers</span><span class="feat-tick no">✕</span></div>
+        <div class="feat-row"><span class="feat-icon">🚀</span><span class="feat-text dim">10 Gbps Speed Servers</span><span class="feat-tick no">✕</span></div>
+        <div class="feat-row"><span class="feat-icon">🎧</span><span class="feat-text dim">Priority Support</span><span class="feat-tick no">✕</span></div>
+      </div>
+      <div class="upgrade-btn">💎 &nbsp;Upgrade to Premium</div>
+      <div class="tab-bar">
+        <div class="tab"><span class="tab-icon">🛡</span><span class="tab-lbl">VPN</span></div>
+        <div class="tab"><span class="tab-icon">🌍</span><span class="tab-lbl">Servers</span></div>
+        <div class="tab active"><span class="tab-icon">👤</span><span class="tab-lbl">Account</span></div>
+      </div>
+    </div>
+
+  </div><!-- phone-frame -->
+</div><!-- phone-wrap -->
+
+<script>
+function showScreen(id, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
